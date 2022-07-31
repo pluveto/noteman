@@ -3,11 +3,29 @@
 High level markdown notes management tool.
 
 
+## What can it do?
+
+1. Collect markdown files in diffrent locations
+1. Find title / date and generate slug. All automatically. Supports chinese title slug translation.
+1. Reformat these files and send to a target dir (such as `content` dir for hugo)
+1. Build site and publish to your server.
+
 ## Usage
+
+Configuration
 
 ```
 code ~/.config/noteman/config.jsonc
 ```
+
+Commands
+
+```
+noteman sync
+noteman build
+noteman publish
+```
+
 
 ## Thanks to
 

@@ -49,4 +49,7 @@ func (a *App) Run() {
 	if a.CliArgs.BuildCmd != nil {
 		NewBuildProcessor(a.Conf, a.CliArgs.BuildCmd).Execute()
 	}
+	if a.CliArgs.PublishCmd != nil {
+		NewPublishProcessor(a.Conf, a.CliArgs.PublishCmd).Execute()
+	}
 }

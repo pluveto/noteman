@@ -46,11 +46,22 @@ type AppConfBuild struct {
 	WorkingDirectory string `json:"working_directory"`
 }
 
+type PublishServiceConf struct {
+	Name   string                 `json:"name"`
+	Params map[string]interface{} `json:"params"`
+}
+
+type AppConfPublish struct {
+	Artifacts string             `json:"artifacts"`
+	Service   PublishServiceConf `json:"service"`
+}
+
 type AppConf struct {
 	confPath string        `json:"-"` // used for tracking path of current config file
 	Source   AppConfSource `json:"source"`
 	Target   AppConfTarget `json:"target"`
 	Build    AppConfBuild  `json:"build"`
+	Publish  AppConfPublish
 }
 
 func (c *AppConf) SetConfPath(path string) {
