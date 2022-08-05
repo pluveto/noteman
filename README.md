@@ -20,9 +20,14 @@ code ~/.config/noteman/config.jsonc
 
 Commands
 
-```
+```shell
+# Sync notes to target dir (with preprocessing)
 noteman sync
+# Preview using your browser
+noteman preview
+# Build site
 noteman build
+# Compress and publish to your server
 noteman publish
 ```
 
