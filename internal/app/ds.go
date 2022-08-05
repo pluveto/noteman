@@ -42,10 +42,15 @@ func (t *AppConfTarget) ResolveMapping(sourcePath string, slug_ string) (targetP
 }
 
 type AppConfBuild struct {
-	Command          string `json:"command"`
-	WorkingDirectory string `json:"working_directory"`
+	Command          string   `json:"command"`
+	Args             []string `json:"args"`
+	WorkingDirectory string   `json:"working_directory"`
 }
-
+type AppConfPreview struct {
+	Command          string   `json:"command"`
+	Args             []string `json:"args"`
+	WorkingDirectory string   `json:"working_directory"`
+}
 type PublishServiceConf struct {
 	Name   string                 `json:"name"`
 	Params map[string]interface{} `json:"params"`
@@ -57,10 +62,11 @@ type AppConfPublish struct {
 }
 
 type AppConf struct {
-	confPath string        `json:"-"` // used for tracking path of current config file
-	Source   AppConfSource `json:"source"`
-	Target   AppConfTarget `json:"target"`
-	Build    AppConfBuild  `json:"build"`
+	confPath string         `json:"-"` // used for tracking path of current config file
+	Source   AppConfSource  `json:"source"`
+	Target   AppConfTarget  `json:"target"`
+	Build    AppConfBuild   `json:"build"`
+	Preview  AppConfPreview `json:"preview"`
 	Publish  AppConfPublish
 }
 
@@ -99,11 +105,13 @@ type SyncCmd struct {
 type BuildCmd struct{}
 
 type PublishCmd struct{}
+type PreviewCmd struct{}
 
 type CliArgs struct {
 	SyncCmd    *SyncCmd    `arg:"subcommand:sync"`
 	BuildCmd   *BuildCmd   `arg:"subcommand:build"`
 	PublishCmd *PublishCmd `arg:"subcommand:publish"`
+	PreviewCmd *PreviewCmd `arg:"subcommand:preview"`
 }
 
 type SourceGlobber struct {

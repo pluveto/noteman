@@ -52,4 +52,7 @@ func (a *App) Run() {
 	if a.CliArgs.PublishCmd != nil {
 		NewPublishProcessor(a.Conf, a.CliArgs.PublishCmd).Execute()
 	}
+	if a.CliArgs.PreviewCmd != nil {
+		NewPreviewProcessor(a.Conf, a.CliArgs.PreviewCmd).Execute()
+	}
 }
