@@ -41,7 +41,7 @@ func (a *App) Run() {
 	logrus.Info("noteman is started")
 	p := arg.MustParse(a.CliArgs)
 	if p.Subcommand() == nil {
-		p.Fail("missing subcommand")
+		p.Fail("missing subcommand. use sync|build|publish|preview")
 	}
 	if a.CliArgs.SyncCmd != nil {
 		NewSyncProcessor(a.Conf, a.CliArgs.SyncCmd).Execute()
