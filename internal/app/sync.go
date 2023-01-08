@@ -5,12 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/djherbis/times"
-	"github.com/gosimple/slug"
+	slugUtil "github.com/gosimple/slug"
 
 	"github.com/pluveto/noteman/internal/pkg"
 	"github.com/pluveto/noteman/internal/pkg/mdreformatter"
@@ -53,6 +54,7 @@ func NewSyncProcessor(appConf *AppConf, cmd *SyncCmd) *SyncProcessor {
 	err := ret.PrepareTasks()
 	if err != nil {
 		logrus.Fatalln("failed at preparing tasks: ", err)
+		os.Exit(1)
 	}
 	return ret
 }
@@ -131,13 +133,21 @@ func (p *SyncProcessor) Execute() {
 			continue
 		}
 		mb.Meta["date"] = date
-		slug, err := extractSlug(out)
+		slug, _, err := extractSlug(out)
 		if err != nil {
 			logrus.Errorln("failed to generate slug", pkg.QuotePath(out.srcPath), err.Error())
 			pkg.WaitForEnter()
 			continue
 		}
 		mb.Meta["slug"] = slug
+		// if generated {
+		// 	// if slug is generated, write back to original file
+		// 	logrus.Debugln("writing back to original file")
+		// 	err := ioutil.WriteFile(out.srcPath, []byte(out.mb.Dump()), 0644)
+		// 	if err != nil {
+		// 		logrus.Errorln("failed to write meta back to source:", pkg.QuotePath(out.srcPath), err.Error())
+		// 	}
+		// }
 	}
 	// pass 3 - remove extra title and rerender body
 	for _, out := range metaouts {
@@ -251,11 +261,12 @@ func extractDate(out *metaout) (string, error) {
 	return "", errors.New("no date found")
 }
 
-func extractSlug(out *metaout) (string, error) {
+// extractSlug 从 meta header 提取 slug，如果没有，则自动翻译一个
+func extractSlug(out *metaout) (slug string, generated bool, err error) {
 	mb := out.mb
 	if s, ok := mb.Meta["slug"]; ok {
 		if ts, ok := s.(string); ok {
-			return ts, nil
+			return ts, false, nil
 		}
 	}
 	var slug_ string
@@ -270,14 +281,14 @@ func extractSlug(out *metaout) (string, error) {
 			slug_ = sug_slug
 		}
 		if slug_ == "" {
-			slug_ = slug.Make(title)
+			slug_ = slugUtil.Make(title)
 		}
 	} else {
-		slug_ = slug.Make(title)
+		slug_ = slugUtil.Make(title)
 	}
 	pkg.Assert(slug_ != "", "slug is empty")
 	logrus.Debugln("slug: ", slug_)
-	return slug_, nil
+	return slug_, true, nil
 }
 
 func suggestSlug(title string) string {
@@ -286,7 +297,7 @@ func suggestSlug(title string) string {
 		logrus.Errorln("failed to translate title to english: ", err.Error())
 		return ""
 	}
-	slug_ := slug.Make(en)
+	slug_ := slugUtil.Make(en)
 	fmt.Printf("Suggested slug: ")
 	fmt.Println(slug_)
 	return slug_

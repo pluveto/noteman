@@ -26,7 +26,10 @@ func (t *AppConfTarget) ResolveMapping(sourcePath string, slug_ string) (targetP
 	sourcePath = filepath.Dir(sourcePath)
 	// find most match prefix
 	var prefix string
-	for k := range t.Mapping {
+	for mapKey := range t.Mapping {
+		// uniform path
+		k := filepath.ToSlash(mapKey)
+		sourcePath = filepath.ToSlash(sourcePath)
 		if strings.HasPrefix(sourcePath, k) && len(k) > len(prefix) {
 			prefix = k
 		}

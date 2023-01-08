@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -117,10 +118,15 @@ func SimpleGlob(dir string, files *[]string) error {
 	}
 
 	for _, fileInfo := range fileInfos {
+		var entryName = fileInfo.Name()
 		if fileInfo.IsDir() {
-			SimpleGlob(fileInfo.Name(), files)
+			// ignore hidden directories
+			if strings.HasPrefix(filepath.Base(entryName), ".") {
+				continue
+			}
+			SimpleGlob(entryName, files)
 		} else {
-			*files = append(*files, path.Join(dir, fileInfo.Name()))
+			*files = append(*files, path.Join(dir, entryName))
 		}
 	}
 	return nil
@@ -141,12 +147,24 @@ func SimplifyPath(path string) string {
 }
 
 func ReplaceDotPath(path string, current string) string {
-	if !strings.HasPrefix(path, "/") {
+	if !isAbsPath(path) {
 		sim := SimplifyPath(path)
 		return current + "/" + sim
 	}
 
 	return path
+}
+
+func isAbsPath(path string) bool {
+	if len(path) > 0 && path[0] == '/' {
+		return true
+	}
+	// Windows
+	var isWindows = os.PathSeparator == '\\' && os.PathListSeparator == ';'
+	if isWindows && len(path) > 2 && path[1] == ':' {
+		return true
+	}
+	return false
 }
 
 func WaitForEnter() {
