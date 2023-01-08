@@ -10,6 +10,12 @@ High level markdown notes management tool.
 1. Reformat these files and send to a target dir (such as `content` dir for hugo)
 1. Build site and publish to your server.
 
+## Build
+
+Run:
+
+    make
+
 ## Usage
 
 Configuration
