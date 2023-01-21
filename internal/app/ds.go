@@ -60,8 +60,9 @@ type PublishServiceConf struct {
 }
 
 type AppConfPublish struct {
-	Artifacts string             `json:"artifacts"`
-	Service   PublishServiceConf `json:"service"`
+	Artifacts  string             `json:"artifacts"`
+	Service    PublishServiceConf `json:"service"`
+	PreviewUrl string             `json:"preview_url"`
 }
 
 type AppConf struct {

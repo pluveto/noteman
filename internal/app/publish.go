@@ -2,6 +2,7 @@ package app
 
 import (
 	"archive/zip"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -64,6 +65,10 @@ func (p *PublishProcessor) publish(arc string) {
 			}
 			os.Exit(1)
 		}
+		logrus.Infoln("publish success")
+		fmt.Println("Preview at", p.appConf.Publish.PreviewUrl)
+	} else {
+		logrus.Fatalln("unsupported service: ", svc.Name)
 	}
 }
 func (p *PublishProcessor) createTmpArch() string {
