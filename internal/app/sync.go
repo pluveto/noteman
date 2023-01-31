@@ -22,9 +22,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type SyncTask struct {
-}
-
 type SyncProcessor struct {
 	appConf *AppConf
 	cmd     *SyncCmd
