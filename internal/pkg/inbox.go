@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -111,22 +110,24 @@ func SimpleGlob(dir string, files *[]string) error {
 	if files == nil {
 		return fmt.Errorf("must give a receive slice for files")
 	}
-	fileInfos, err := ioutil.ReadDir(dir)
+	entries, err := os.ReadDir(dir)
 	if err != nil {
 		logrus.Errorln(err)
 		return err
 	}
 
-	for _, fileInfo := range fileInfos {
-		var entryName = fileInfo.Name()
-		if fileInfo.IsDir() {
+	for _, entry := range entries {
+		var entryName = entry.Name()
+		entryFullName := path.Join(dir, entryName)
+
+		if entry.IsDir() {
 			// ignore hidden directories
 			if strings.HasPrefix(filepath.Base(entryName), ".") {
 				continue
 			}
-			SimpleGlob(entryName, files)
+			SimpleGlob(entryFullName, files)
 		} else {
-			*files = append(*files, path.Join(dir, entryName))
+			*files = append(*files, entryFullName)
 		}
 	}
 	return nil
