@@ -10,11 +10,13 @@ import (
 	"strings"
 )
 
-func Translate(source, sourceLang, targetLang string) (string, error) {
+func Translate(sourceText, sourceLang, targetLang string) (string, error) {
 	var text []string
 	var result []interface{}
-
-	encodedSource := url.QueryEscape(source)
+	// replace c++ to cpp, C++ to cpp
+	sourceText = strings.Replace(sourceText, "c++", "cpp", -1)
+	sourceText = strings.Replace(sourceText, "C++", "cpp", -1)
+	encodedSource := url.QueryEscape(sourceText)
 	url := "https://translate.googleapis.com/translate_a/single?client=gtx" + "&tl=" + targetLang + "&dt=t&q=" + encodedSource
 	if sourceLang != "" {
 		url += "&sl=" + sourceLang
