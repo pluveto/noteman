@@ -66,7 +66,8 @@ example:
                 "api": "http://www.example.com/upload",
                 "auth": "2xHHm0Z5BLb0M1GlBlpAGgfuxbqzSrDv"
             }
-        }
+        },
+        "preview_url": "https://www.example.com"
     }
 }
 ```
