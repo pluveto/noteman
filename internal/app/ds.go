@@ -41,7 +41,7 @@ func (t *AppConfTarget) ResolveMapping(sourcePath string, slug_ string) (targetP
 	if !ok {
 		return "", errors.New("no mapping found for " + sourcePath)
 	}
-	return filepath.Join(target, strings.TrimPrefix(sourcePath, prefix), slug_), nil
+	return filepath.Join(target, slug_), nil
 }
 
 type AppConfBuild struct {
