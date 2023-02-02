@@ -156,16 +156,6 @@ func (g *SourceGlobber) Glob() ([]string, error) {
 					logrus.Debugln("ignoring: ", path, "by .gitignore rule")
 					continue
 				}
-				// if start with ., ignore
-				if strings.HasPrefix(path, ".") {
-					logrus.Debugln("ignoring: ", path, "by ignore hidden rule")
-					continue
-				}
-				// if ends with .pri.md, ignore
-				if strings.HasSuffix(path, ".pri.md") {
-					logrus.Debugln("ignoring: ", path, "by ignore hidden rule")
-					continue
-				}
 				// if not match, append it
 				ret = append(ret, abspath)
 			}
