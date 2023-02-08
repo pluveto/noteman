@@ -2,7 +2,6 @@
 
 High level markdown notes management tool.
 
-
 ## What can it do?
 
 1. Collect markdown files in diffrent locations
@@ -84,7 +83,6 @@ noteman build
 # Compress and publish to your server
 noteman publish
 ```
-
 
 ## Thanks to
 
