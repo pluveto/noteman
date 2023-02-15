@@ -30,6 +30,9 @@ func (t *AppConfTarget) ResolveMapping(sourcePath string, slug_ string) (targetP
 		// uniform path
 		k := filepath.ToSlash(mapKey)
 		sourcePath = filepath.ToSlash(sourcePath)
+		if ! strings.HasSuffix(sourcePath, "/") {
+			sourcePath += "/"
+		}
 		if strings.HasPrefix(sourcePath, k) && len(k) > len(prefix) {
 			prefix = k
 		}
