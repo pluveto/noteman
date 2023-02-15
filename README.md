@@ -13,23 +13,25 @@ High level markdown notes management tool.
 
 Run:
 
-    make
+```bash
+make
+```
 
 ## Usage
 
 Configuration
 
-```
+```bash
 code ~/.config/noteman/config.jsonc
 ```
 
 example:
 
-```
+```jsonc
 {
     "source": {
         "directories": [
-            "/home/pluveto/Documents/Notes/" // raw source markdown files dir
+            "/home/pluveto/Workspace/notes/blog-src" // raw source markdown files dir
         ],
         "filters": {
             "regex_filter": {
@@ -42,28 +44,28 @@ example:
     "target": {
         "mapping": {
             // map source dir to target dir
-            "/home/pluveto/Documents/Notes/": "/home/pluveto/Documents/Blog/example.com/content/posts"
+            "/home/pluveto/Workspace/notes/blog-src": "/home/pluveto/Workspace/notes/blog/content/posts"
         }
     },
     "build": {
         "command": "hugo",
         "args": [],
-        "working_directory": "/home/pluveto/Documents/Blog/example.com"
+        "working_directory": "/home/pluveto/Workspace/notes/blog"
     },
     "preview": {
         "command": "hugo",
         "args": [
             "server"
         ],
-        "working_directory": "/home/pluveto/Documents/Blog/example.com"
+        "working_directory": "/home/pluveto/Workspace/notes/blog"
     },
     "publish": {
-        "artifacts": "/home/pluveto/Documents/Blog/example.com/public",
+        "artifacts": "/home/pluveto/Workspace/notes/blog/public",
         "service": {
             "name": "simple_http_upload",
             "params": {
                 "api": "http://www.example.com/upload",
-                "auth": "2xHHm0Z5BLb0M1GlBlpAGgfuxbqzSrDv"
+                "auth": "pluveto2xHHm0Z5BLb0M1GlBlpAGgfuxbqzSrDv"
             }
         },
         "preview_url": "https://www.example.com"
