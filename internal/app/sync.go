@@ -150,7 +150,8 @@ func (p *SyncProcessor) Execute() {
 	for _, out := range metaouts {
 		raw := out.mb.RawBody
 		var buff bytes.Buffer
-		err := mdreformatter.Format([]byte(raw), &buff)
+		mathjaxEnabled := out.mb.Meta["mathjax"] != nil && out.mb.Meta["mathjax"].(bool)
+		err := mdreformatter.Format([]byte(raw), &buff, mathjaxEnabled)
 		if err != nil {
 			logrus.Errorln("failed to reformat body", pkg.QuotePath(out.srcPath), err.Error())
 			pkg.WaitForEnter()
@@ -184,6 +185,7 @@ func (p *SyncProcessor) Execute() {
 			mb.RawMeta = metaStr
 			mb.MetaChanged = true
 		}
+		logrus.Debugln("target: ", out.targetPath)
 		err = ioutil.WriteFile(out.targetPath, []byte(out.mb.DumpFormatted()), 0644)
 		if err != nil {
 			logrus.Errorln("failed to write meta, src:", pkg.QuotePath(out.srcPath), "target:", out.targetPath, err.Error())

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	mathjax "github.com/litao91/goldmark-mathjax"
 	"github.com/yuin/goldmark/ast"
 	east "github.com/yuin/goldmark/extension/ast"
 	"github.com/yuin/goldmark/util"
@@ -565,6 +566,28 @@ func Render(w io.Writer, source []byte, node ast.Node) (err error) {
 		case *east.TableRow:
 
 		case *east.TableCell:
+
+		case *mathjax.InlineMath:
+			if entering {
+				write("<code>$")
+				write("%s", n.Text(source))
+				write("$</code>")
+				return ast.WalkSkipChildren, nil
+			}
+
+		case *mathjax.MathBlock:
+			if entering {
+				write("<pre><code>\n")
+				write("$$\n")
+				lines := n.Lines()
+				for i := 0; i < lines.Len(); i++ {
+					line := lines.At(i)
+					write("%s", line.Value(source))
+				}
+				write("$$\n")
+				write("</code></pre>\n\n")
+				return ast.WalkSkipChildren, nil
+			}
 
 		default:
 			if Logger != nil && entering {

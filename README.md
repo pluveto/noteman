@@ -86,6 +86,30 @@ noteman build
 noteman publish
 ```
 
+## Minimal Example
+
+Use noteman as a markdown file preprocessor.
+
+```bash
+mkdir input
+mkdir output
+vi input
+---
+Hello world
+
+$$
+
+E = mc^2 \\
+
+F_G = G \frac{m_1 m_2}{r^2}
+
+$$
+```
+
+```bash
+./noteman sync
+```
+
 ## Thanks to
 
 [Lorem Markdownum](https://jaspervdj.be/lorem-markdownum/)

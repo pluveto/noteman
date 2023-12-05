@@ -1,9 +1,9 @@
 package mdreformatter
 
-
 import (
 	"io"
 
+	mathjax "github.com/litao91/goldmark-mathjax"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
@@ -16,19 +16,23 @@ import (
 //
 // Use internal markdown parser with extensions GFM, DefinitionList,
 // Footnote, LineBlocks, BlockAttributes and other.
-func Format(source []byte, w io.Writer, opts ...parser.ParseOption) error {
+func Format(source []byte, w io.Writer, math bool) error {
+	extensions := []goldmark.Extender{
+		extension.GFM,
+		extension.DefinitionList,
+		extension.Footnote,
+	}
+	if math {
+		extensions = append(extensions, mathjax.MathJax)
+	}
+
 	md := goldmark.New(
-		goldmark.WithExtensions(
-			extension.GFM,
-			extension.DefinitionList,
-			extension.Footnote,
-		),
+		goldmark.WithExtensions(extensions...),
 		goldmark.WithParserOptions(
 			parser.WithAttribute(),
 		),
 	)
-	doc := md.Parser().Parse(
-		text.NewReader(source), opts...)
+	doc := md.Parser().Parse(text.NewReader(source))
 	return Render(w, source, doc)
 }
 
