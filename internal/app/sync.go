@@ -151,6 +151,10 @@ func (p *SyncProcessor) Execute() {
 		raw := out.mb.RawBody
 		var buff bytes.Buffer
 		mathjaxEnabled := out.mb.Meta["mathjax"] != nil && out.mb.Meta["mathjax"].(bool)
+		if mathjaxEnabled {
+			print("mathjax enabled for ", out.srcPath, "\n")
+			raw = strings.ReplaceAll(raw, "$$\n$$", "$$\n\n$$")
+		}
 		err := mdreformatter.Format([]byte(raw), &buff, mathjaxEnabled)
 		if err != nil {
 			logrus.Errorln("failed to reformat body", pkg.QuotePath(out.srcPath), err.Error())
