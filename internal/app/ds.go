@@ -21,7 +21,7 @@ type AppConfTarget struct {
 	Mapping map[string]string `json:"mapping"`
 }
 
-func (t *AppConfTarget) ResolveMapping(sourcePath string, slug_ string) (targetPath string, err error) {
+func (t *AppConfTarget) ResolveMapping(sourcePath string, slug_ string, lang string) (targetPath string, err error) {
 	pkg.Assert(t.Mapping != nil, "nil t.Mapping")
 	sourcePath = filepath.Dir(sourcePath)
 	// find most match prefix
@@ -44,6 +44,7 @@ func (t *AppConfTarget) ResolveMapping(sourcePath string, slug_ string) (targetP
 	if !ok {
 		return "", errors.New("no mapping found for " + sourcePath)
 	}
+	target = strings.ReplaceAll(target, "{{lang_prefix}}", lang + "/")
 	return filepath.Join(target, slug_), nil
 }
 

@@ -137,6 +137,12 @@ func (p *SyncProcessor) Execute() {
 			continue
 		}
 		mb.Meta["slug"] = slug
+
+		_, ok := mb.Meta["lang"]
+		if !ok {
+			mb.Meta["lang"] = "zh"
+		}
+		
 		// if generated {
 		// 	// if slug is generated, write back to original file
 		// 	logrus.Debugln("writing back to original file")
@@ -164,16 +170,22 @@ func (p *SyncProcessor) Execute() {
 		out.mb.RawBodyFormatted = buff.String()
 	}
 	// pass 4 - generate target path
-	for i, out := range metaouts {
+	for _, out := range metaouts {
 		slug_ := out.mb.Meta["slug"].(string)
-		targetPath, err := p.appConf.Target.ResolveMapping(out.srcPath, slug_)
+		lang := out.mb.Meta["lang"].(string)
+		if lang == "" {
+			logrus.Errorln("lang is empty", pkg.QuotePath(out.srcPath))
+			pkg.WaitForEnter()
+			continue
+		}
+		targetPath, err := p.appConf.Target.ResolveMapping(out.srcPath, slug_, lang)
 		if err != nil {
 			logrus.Errorln("failed to resolve mapping", pkg.QuotePath(out.srcPath), err.Error())
 			pkg.WaitForEnter()
 			continue
 		}
 		pkg.Assert(targetPath != "", "target path should not be empty")
-		metaouts[i].targetPath = targetPath + ".md"
+		out.targetPath = targetPath + ".md"
 	}
 	// pass 5 - write to target
 	for _, out := range metaouts {
@@ -190,7 +202,7 @@ func (p *SyncProcessor) Execute() {
 			mb.MetaChanged = true
 		}
 		logrus.Debugln("target: ", out.targetPath)
-		err = ioutil.WriteFile(out.targetPath, []byte(out.mb.DumpFormatted()), 0644)
+		err = os.WriteFile(out.targetPath, []byte(out.mb.DumpFormatted()), 0644)
 		if err != nil {
 			logrus.Errorln("failed to write meta, src:", pkg.QuotePath(out.srcPath), "target:", out.targetPath, err.Error())
 			pkg.WaitForEnter()
