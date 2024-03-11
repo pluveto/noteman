@@ -30,7 +30,7 @@ func (t *AppConfTarget) ResolveMapping(sourcePath string, slug_ string, lang str
 		// uniform path
 		k := filepath.ToSlash(mapKey)
 		sourcePath = filepath.ToSlash(sourcePath)
-		if ! strings.HasSuffix(sourcePath, "/") {
+		if !strings.HasSuffix(sourcePath, "/") {
 			sourcePath += "/"
 		}
 		if strings.HasPrefix(sourcePath, k) && len(k) > len(prefix) {
@@ -44,7 +44,9 @@ func (t *AppConfTarget) ResolveMapping(sourcePath string, slug_ string, lang str
 	if !ok {
 		return "", errors.New("no mapping found for " + sourcePath)
 	}
-	target = strings.ReplaceAll(target, "{{lang_prefix}}", lang + "/")
+	println("target before replace: ", target)
+	target = strings.ReplaceAll(target, "{{lang_prefix}}", lang+"/")
+	println("target after replace: ", target)
 	return filepath.Join(target, slug_), nil
 }
 

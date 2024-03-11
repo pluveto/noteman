@@ -44,7 +44,7 @@ example:
     "target": {
         "mapping": {
             // map source dir to target dir
-            "/home/pluveto/Workspace/notes/blog-src": "/home/pluveto/Workspace/notes/blog/content/posts"
+            "/Users/zijingzhang/Repo/blogws/blog-src": "/Users/zijingzhang/Repo/blogws/blog/content/{{lang_prefix}}/posts"
         }
     },
     "build": {

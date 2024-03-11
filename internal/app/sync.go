@@ -99,7 +99,7 @@ func (p *SyncProcessor) Execute() {
 			continue
 		}
 		metaouts = append(metaouts, &metaout{srcPath: p, mb: splited})
-		logrus.Debugln("meta: ", splited.RawMeta)
+		// logrus.Debugln("meta: ", splited.RawMeta)
 		splited.Meta = make(map[string]interface{})
 		// logrus.Debugln("body: ", splited.Body)
 	}
@@ -142,7 +142,7 @@ func (p *SyncProcessor) Execute() {
 		if !ok {
 			mb.Meta["lang"] = "zh"
 		}
-		
+
 		// if generated {
 		// 	// if slug is generated, write back to original file
 		// 	logrus.Debugln("writing back to original file")
