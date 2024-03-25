@@ -577,7 +577,7 @@ func Render(w io.Writer, source []byte, node ast.Node) (err error) {
 
 		case *mathjax.MathBlock:
 			if entering {
-				write("<pre><code>\n")
+				write("<pre class=\"mathjax-preview\"><code>\n")
 				write("$$\n")
 				lines := n.Lines()
 				for i := 0; i < lines.Len(); i++ {
