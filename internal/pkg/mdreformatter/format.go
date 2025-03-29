@@ -3,6 +3,7 @@ package mdreformatter
 import (
 	"io"
 
+	// mathjax "github.com/litao91/goldmark-mathjax"
 	mathjax "github.com/litao91/goldmark-mathjax"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
