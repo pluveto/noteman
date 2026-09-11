@@ -202,7 +202,13 @@ func (p *SyncProcessor) Execute() {
 			mb.MetaChanged = true
 		}
 		logrus.Debugln("target: ", out.targetPath)
-		err = os.WriteFile(out.targetPath, []byte(out.mb.DumpFormatted()), 0644)
+		hugoBody, err := dumpForHugo(mb)
+		if err != nil {
+			logrus.Errorln("failed to marshal hugo meta", pkg.QuotePath(out.srcPath), err.Error())
+			pkg.WaitForEnter()
+			continue
+		}
+		err = os.WriteFile(out.targetPath, []byte(hugoBody), 0644)
 		if err != nil {
 			logrus.Errorln("failed to write meta, src:", pkg.QuotePath(out.srcPath), "target:", out.targetPath, err.Error())
 			pkg.WaitForEnter()
@@ -304,6 +310,24 @@ func extractSlug(out *metaout) (slug string, generated bool, err error) {
 	pkg.Assert(slug_ != "", "slug is empty")
 	logrus.Debugln("slug: ", slug_)
 	return slug_, true, nil
+}
+
+// dumpForHugo renders target markdown without reserved Hugo front matter keys.
+// `lang` is kept on the source note for path mapping, but Hugo v0.144+ infers
+// language from contentDir and errors if `lang` is set in front matter.
+func dumpForHugo(mb *pkg.MarkdownMetaBody) (string, error) {
+	meta := make(map[string]interface{}, len(mb.Meta))
+	for k, v := range mb.Meta {
+		if k == "lang" || k == "kind" || k == "path" {
+			continue
+		}
+		meta[k] = v
+	}
+	b, err := yaml.Marshal(meta)
+	if err != nil {
+		return "", err
+	}
+	return "---\n" + string(b) + "---\n" + mb.RawBodyFormatted, nil
 }
 
 func suggestSlug(title string) string {
