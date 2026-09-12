@@ -78,6 +78,8 @@ Commands
 ```shell
 # Sync notes to target dir (with preprocessing)
 noteman sync
+# Generate target files without writing metadata back to source notes
+noteman sync --no-write-back
 # Preview using your browser
 noteman preview
 # Build site
@@ -87,6 +89,19 @@ noteman publish
 ```
 
 ## Minimal Example
+
+Math-enabled notes (`mathjax: true`) use the maintained
+[`pluveto/goldmark-mathjax-fix`](https://github.com/pluveto/goldmark-mathjax-fix)
+module, pinned to an immutable version in `go.mod`. Formatting normalizes CRLF
+to LF without modifying the source body. Adjacent display blocks do not require
+an extra blank line.
+
+Sync validates and formats every note before writing any target or source file.
+Invalid metadata, formatting errors, missing path mappings and duplicate targets
+abort the operation with a nonzero exit status. Filesystem write errors are
+reported immediately; writes are not a transaction across the entire directory.
+For a preview, point the target mapping at a temporary directory and run
+`noteman sync --no-write-back`.
 
 Use noteman as a markdown file preprocessor.
 

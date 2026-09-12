@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/djherbis/times"
@@ -77,157 +75,109 @@ type metaout struct {
 }
 
 // Execute executes the SyncProcessor.
-func (p *SyncProcessor) Execute() {
-	logrus.Debugln("Sync processor")
+func (p *SyncProcessor) Execute() error {
+	// Complete parsing, formatting and path validation before writing any files.
 	metaouts := []*metaout{}
-	// pass 1 - load posts and meta
-	for _, p := range p.tasks {
-		source, err := ioutil.ReadFile(p)
-		if !pkg.IsMarkdownExt(p) {
-			logrus.Warningln("skipping non-markdown file: ", p)
+	targets := map[string]string{}
+	bodies := map[string]string{}
+	for _, sourcePath := range p.tasks {
+		if !pkg.IsMarkdownExt(sourcePath) {
 			continue
 		}
+		source, err := os.ReadFile(sourcePath)
 		if err != nil {
-			logrus.Errorln("failed to read", pkg.QuotePath(p), err.Error())
-			pkg.WaitForEnter()
-			continue
+			return fmt.Errorf("read %q: %w", sourcePath, err)
 		}
-		splited, err := pkg.ExtractMarkdownMeta([]rune(string(source)))
+		mb, err := pkg.ExtractMarkdownMeta([]rune(string(source)))
 		if err != nil {
-			logrus.Errorln("failed to extract meta", pkg.QuotePath(p), err.Error())
-			pkg.WaitForEnter()
-			continue
+			return fmt.Errorf("extract metadata %q: %w", sourcePath, err)
 		}
-		metaouts = append(metaouts, &metaout{srcPath: p, mb: splited})
-		// logrus.Debugln("meta: ", splited.RawMeta)
-		splited.Meta = make(map[string]interface{})
-		// logrus.Debugln("body: ", splited.Body)
-	}
-	// pass 2 - fill meta
-	/**
-	 * required fields: title, date, slug
-	 */
-	for _, out := range metaouts {
-		mb := out.mb
-		pkg.Assert(mb.Meta != nil, "meta is nil")
-		err := yaml.Unmarshal([]byte(mb.RawMeta), &mb.Meta)
-		if err != nil {
-			logrus.Errorln("failed to unmarshal meta", pkg.QuotePath(out.srcPath), err.Error())
-			pkg.WaitForEnter()
-			continue
+		mb.Meta = make(map[string]interface{})
+		if err := yaml.Unmarshal([]byte(mb.RawMeta), &mb.Meta); err != nil {
+			return fmt.Errorf("parse metadata %q: %w", sourcePath, err)
 		}
+		if mb.Meta == nil {
+			mb.Meta = make(map[string]interface{})
+		}
+		out := &metaout{srcPath: sourcePath, mb: mb}
 		title, err := extractTitle(out)
 		if err != nil {
-			logrus.Errorln("failed to generate title", pkg.QuotePath(out.srcPath), err.Error())
-			pkg.WaitForEnter()
-			continue
+			return fmt.Errorf("title %q: %w", sourcePath, err)
 		}
 		mb.Meta["title"] = title
 		date, err := extractDate(out)
 		if err != nil {
-			logrus.Errorln("failed to get document date", pkg.QuotePath(out.srcPath), err.Error())
-			pkg.WaitForEnter()
-			continue
+			return fmt.Errorf("date %q: %w", sourcePath, err)
 		}
 		mb.Meta["date"] = date
 		slug, _, err := extractSlug(out)
 		if err != nil {
-			logrus.Errorln("failed to generate slug", pkg.QuotePath(out.srcPath), err.Error())
-			pkg.WaitForEnter()
-			continue
+			return fmt.Errorf("slug %q: %w", sourcePath, err)
 		}
 		mb.Meta["slug"] = slug
-
-		_, ok := mb.Meta["lang"]
-		if !ok {
+		if _, ok := mb.Meta["lang"]; !ok {
 			mb.Meta["lang"] = "zh"
 		}
-
-		// if generated {
-		// 	// if slug is generated, write back to original file
-		// 	logrus.Debugln("writing back to original file")
-		// 	err := ioutil.WriteFile(out.srcPath, []byte(out.mb.Dump()), 0644)
-		// 	if err != nil {
-		// 		logrus.Errorln("failed to write meta back to source:", pkg.QuotePath(out.srcPath), err.Error())
-		// 	}
-		// }
-	}
-	// pass 3 - remove extra title and rerender body
-	for _, out := range metaouts {
-		raw := out.mb.RawBody
+		lang, ok := mb.Meta["lang"].(string)
+		if !ok || lang == "" {
+			return fmt.Errorf("lang must be a nonempty string in %q", sourcePath)
+		}
+		mathEnabled := false
+		if value, exists := mb.Meta["mathjax"]; exists {
+			mathEnabled, ok = value.(bool)
+			if !ok {
+				return fmt.Errorf("mathjax must be a boolean in %q", sourcePath)
+			}
+		}
 		var buff bytes.Buffer
-		mathjaxEnabled := out.mb.Meta["mathjax"] != nil && out.mb.Meta["mathjax"].(bool)
-		if mathjaxEnabled {
-			print("mathjax enabled for ", out.srcPath, "\n")
-			raw = strings.ReplaceAll(raw, "$$\n$$", "$$\n\n$$")
+		if err := mdreformatter.Format([]byte(mb.RawBody), &buff, mathEnabled); err != nil {
+			return fmt.Errorf("format %q: %w", sourcePath, err)
 		}
-		err := mdreformatter.Format([]byte(raw), &buff, mathjaxEnabled)
+		mb.RawBodyFormatted = buff.String()
+		targetPath, err := p.appConf.Target.ResolveMapping(sourcePath, slug, lang)
 		if err != nil {
-			logrus.Errorln("failed to reformat body", pkg.QuotePath(out.srcPath), err.Error())
-			pkg.WaitForEnter()
-			continue
+			return fmt.Errorf("map %q: %w", sourcePath, err)
 		}
-		out.mb.RawBodyFormatted = buff.String()
-	}
-	// pass 4 - generate target path
-	for _, out := range metaouts {
-		slug_ := out.mb.Meta["slug"].(string)
-		lang := out.mb.Meta["lang"].(string)
-		if lang == "" {
-			logrus.Errorln("lang is empty", pkg.QuotePath(out.srcPath))
-			pkg.WaitForEnter()
-			continue
-		}
-		targetPath, err := p.appConf.Target.ResolveMapping(out.srcPath, slug_, lang)
-		if err != nil {
-			logrus.Errorln("failed to resolve mapping", pkg.QuotePath(out.srcPath), err.Error())
-			pkg.WaitForEnter()
-			continue
-		}
-		pkg.Assert(targetPath != "", "target path should not be empty")
 		out.targetPath = targetPath + ".md"
-	}
-	// pass 5 - write to target
-	for _, out := range metaouts {
-		mb := out.mb
+		if previous, exists := targets[out.targetPath]; exists {
+			return fmt.Errorf("duplicate target %q for %q and %q", out.targetPath, previous, sourcePath)
+		}
+		targets[out.targetPath] = sourcePath
 		meta, err := yaml.Marshal(mb.Meta)
 		if err != nil {
-			logrus.Errorln("failed to marshal meta", pkg.QuotePath(out.srcPath), err.Error())
-			pkg.WaitForEnter()
-			continue
+			return fmt.Errorf("encode metadata %q: %w", sourcePath, err)
 		}
-		metaStr := string(meta)
-		if strings.Compare(metaStr, mb.RawMeta) != 0 {
-			mb.RawMeta = metaStr
+		if string(meta) != mb.RawMeta {
+			mb.RawMeta = string(meta)
 			mb.MetaChanged = true
 		}
-		logrus.Debugln("target: ", out.targetPath)
 		hugoBody, err := dumpForHugo(mb)
 		if err != nil {
-			logrus.Errorln("failed to marshal hugo meta", pkg.QuotePath(out.srcPath), err.Error())
-			pkg.WaitForEnter()
-			continue
+			return fmt.Errorf("encode Hugo metadata %q: %w", sourcePath, err)
 		}
-		err = os.WriteFile(out.targetPath, []byte(hugoBody), 0644)
-		if err != nil {
-			logrus.Errorln("failed to write meta, src:", pkg.QuotePath(out.srcPath), "target:", out.targetPath, err.Error())
-			pkg.WaitForEnter()
-			continue
-		}
-		logrus.Debugln("wrote meta from src:", pkg.QuotePath(out.srcPath), "target:", out.targetPath)
+		bodies[out.targetPath] = hugoBody
+		metaouts = append(metaouts, out)
 	}
-	// pass 6 - write meta back to source
+	for _, out := range metaouts {
+		if err := os.MkdirAll(filepath.Dir(out.targetPath), 0755); err != nil {
+			return fmt.Errorf("create target directory %q: %w", out.targetPath, err)
+		}
+		if err := os.WriteFile(out.targetPath, []byte(bodies[out.targetPath]), 0644); err != nil {
+			return fmt.Errorf("write target %q: %w", out.targetPath, err)
+		}
+	}
+	if p.cmd.NoWriteBack {
+		return nil
+	}
 	for _, out := range metaouts {
 		if !out.mb.MetaChanged {
-			logrus.Debugln("no meta changed, skip write back to ", pkg.QuotePath(out.srcPath))
 			continue
 		}
-		err := ioutil.WriteFile(out.srcPath, []byte(out.mb.Dump()), 0644)
-		if err != nil {
-			logrus.Errorln("failed to write meta back to source:", pkg.QuotePath(out.srcPath), err.Error())
+		if err := os.WriteFile(out.srcPath, []byte(out.mb.Dump()), 0644); err != nil {
+			return fmt.Errorf("write metadata %q: %w", out.srcPath, err)
 		}
-		logrus.Debugln("wrote meta back to source:", pkg.QuotePath(out.srcPath))
 	}
+	return nil
 }
 
 // 首先尝试 title 字段，如果没有，则使用一级标题

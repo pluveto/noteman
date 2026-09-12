@@ -11,7 +11,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	mathjax "github.com/litao91/goldmark-mathjax"
+	mathjax "github.com/pluveto/goldmark-mathjax-fix"
 	"github.com/yuin/goldmark/ast"
 	east "github.com/yuin/goldmark/extension/ast"
 	"github.com/yuin/goldmark/util"
@@ -570,7 +570,7 @@ func Render(w io.Writer, source []byte, node ast.Node) (err error) {
 		case *mathjax.InlineMath:
 			if entering {
 				write("<code>$")
-				write("%s", n.Text(source))
+				write("%s", util.EscapeHTML(n.Text(source)))
 				write("$</code>")
 				return ast.WalkSkipChildren, nil
 			}
@@ -582,7 +582,11 @@ func Render(w io.Writer, source []byte, node ast.Node) (err error) {
 				lines := n.Lines()
 				for i := 0; i < lines.Len(); i++ {
 					line := lines.At(i)
-					write("%s", line.Value(source))
+					value := line.Value(source)
+					write("%s", util.EscapeHTML(value))
+					if i == lines.Len()-1 && len(value) > 0 && value[len(value)-1] != '\n' {
+						write("\n")
+					}
 				}
 				write("$$\n")
 				write("</code></pre>\n\n")

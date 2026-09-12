@@ -4,13 +4,13 @@ go 1.18
 
 require (
 	github.com/gosimple/slug v1.12.0
+	github.com/pluveto/goldmark-mathjax-fix v0.0.0-20260912042943-6003870f0925
 	github.com/sirupsen/logrus v1.9.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
 	github.com/gosimple/unidecode v1.0.1 // indirect
-	github.com/litao91/goldmark-mathjax v0.0.0-20210217064022-a43cf739a50f // indirect
 	github.com/stretchr/testify v1.8.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
