@@ -1,10 +1,11 @@
 package mdreformatter
 
 import (
+	"bytes"
+	"fmt"
 	"io"
 
-	// mathjax "github.com/litao91/goldmark-mathjax"
-	mathjax "github.com/litao91/goldmark-mathjax"
+	mathjax "github.com/pluveto/goldmark-mathjax-fix"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
@@ -17,7 +18,14 @@ import (
 //
 // Use internal markdown parser with extensions GFM, DefinitionList,
 // Footnote, LineBlocks, BlockAttributes and other.
-func Format(source []byte, w io.Writer, math bool) error {
+func Format(source []byte, w io.Writer, math bool) (err error) {
+	defer func() {
+		if p := recover(); p != nil {
+			err = fmt.Errorf("format markdown: %v", p)
+		}
+	}()
+	// Use the same source bytes for parsing and rendering on every platform.
+	source = bytes.ReplaceAll(source, []byte("\r\n"), []byte("\n"))
 	extensions := []goldmark.Extender{
 		extension.GFM,
 		extension.DefinitionList,

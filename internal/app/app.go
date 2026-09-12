@@ -44,7 +44,9 @@ func (a *App) Run() {
 		p.Fail("missing subcommand. use sync|build|publish|preview")
 	}
 	if a.CliArgs.SyncCmd != nil {
-		NewSyncProcessor(a.Conf, a.CliArgs.SyncCmd).Execute()
+		if err := NewSyncProcessor(a.Conf, a.CliArgs.SyncCmd).Execute(); err != nil {
+			logrus.Fatal(err)
+		}
 	}
 	if a.CliArgs.BuildCmd != nil {
 		NewBuildProcessor(a.Conf, a.CliArgs.BuildCmd).Execute()

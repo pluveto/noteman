@@ -110,6 +110,7 @@ func (c *AppConf) ResolveRelPath() {
 }
 
 type SyncCmd struct {
+	NoWriteBack bool `arg:"--no-write-back" help:"Generate target files without modifying source metadata"`
 }
 
 type BuildCmd struct{}
